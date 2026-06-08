@@ -3,121 +3,115 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#143c72">
-  <meta name="description" content="업무 성향으로 알아보는 나와 어울리는 군산시 부서 재미용 테스트">
+  <meta name="theme-color" content="#e9edf1">
+  <meta name="description" content="군산시 신규공무원을 위한 재미용 업무 성향 테스트">
   <title>나한테 어울리는 군산시 부서는?</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-shell">
-    <header class="system-bar">
-      <a class="brand" href="#" aria-label="처음 화면으로">
-        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span><strong>군산온</strong><small>스마트 행정업무 포털</small></span>
-      </a>
-      <div class="system-user"><span class="online-dot"></span> 신규주무관 <b>업무중</b></div>
+  <main class="system-frame" id="app">
+    <header class="global-header">
+      <button class="wordmark" id="home-button" type="button" aria-label="처음으로">
+        <span class="wordmark-symbol">문</span>
+        <span><b>공공문서 업무시스템</b><small>신규공무원 성향검토</small></span>
+      </button>
+      <div class="global-meta"><span>문서번호 <b id="header-doc-number">총무-2026-0608</b></span><span class="status-dot">처리상태 <b id="header-status">기안대기</b></span><span>결재대기 <b>0건</b></span></div>
     </header>
 
-    <main id="app" aria-live="polite">
-      <section id="start-screen" class="screen start-screen is-active">
-        <div class="start-grid">
-          <div class="hero-copy">
-            <div class="eyebrow"><span>신규 임용자 전용</span> 업무성향 진단</div>
+    <section id="start-screen" class="screen start-screen is-active">
+      <aside class="side-menu">
+        <p>전자문서 작성</p>
+        <b>기안문 작성</b><span>임시저장 문서</span><span>결재 대기함</span><span>개인 문서함</span>
+      </aside>
+      <div class="start-workspace">
+        <div class="window-title"><span>전자문서 작성</span><div><i></i><i></i><i></i></div></div>
+        <article class="draft-paper">
+          <div class="draft-toolbar"><span class="tag blue">신규기안</span><b>신규공무원 성향검토 기안문</b><span class="tag">임시저장</span></div>
+          <dl class="meta-table start-meta">
+            <div><dt>문서번호</dt><dd>총무-2026-0608</dd></div><div><dt>작성일자</dt><dd id="draft-date">2026.06.08.</dd></div>
+            <div><dt>보존기간</dt><dd>3년</dd></div><div><dt>공개여부</dt><dd>공개</dd></div>
+            <div><dt>처리상태</dt><dd><span class="state-chip">기안대기</span></dd></div><div><dt>결재상태</dt><dd>미상신</dd></div>
+          </dl>
+          <div class="draft-content">
+            <p class="draft-kicker">붙임 없는 단독 기안</p>
             <h1>나한테 어울리는<br><em>군산시 부서</em>는?</h1>
-            <p>전자문서함을 열기 전, 딱 3분.<br>나의 업무 성향과 찰떡인 부서를 알아보세요.</p>
-            <button id="start-button" class="primary-button" type="button">
-              <span>업무 성향 진단 시작</span><b>→</b>
-            </button>
+            <p class="draft-lead">전자문서함, 행감자료, 민원전화 사이에서 드러나는<br>나의 업무 성향을 가볍게 검토해 봅니다.</p>
+            <div class="notice-box"><b>검토 목적</b><span>업무 성향 기반 재미용 부서 추천</span><b>예상 소요</b><span>약 3분 · 총 15문항</span></div>
+            <button id="start-button" class="action-button primary" type="button"><span>성향검토 기안 시작</span><b>기안 →</b></button>
             <p class="disclaimer">※ 실제 인사배치와 무관한 재미용 테스트입니다.</p>
           </div>
-          <div class="hero-panel" aria-hidden="true">
-            <div class="notice-stack">
-              <div class="paper paper-back"></div>
-              <div class="paper paper-mid"></div>
-              <div class="paper paper-front">
-                <div class="paper-head"><span>업무연락</span><b>신규</b></div>
-                <div class="paper-title">신규 공무원<br>업무성향 진단 안내</div>
-                <dl>
-                  <div><dt>문서번호</dt><dd>총무-2026-0608</dd></div>
-                  <div><dt>시행일자</dt><dd>오늘부터 즉시</dd></div>
-                  <div><dt>처리기한</dt><dd>약 3분 이내</dd></div>
-                </dl>
-                <div class="approval-box"><span>담당</span><span>확인</span><i>완료</i></div>
-              </div>
-            </div>
-            <div class="floating-tag tag-one">결재 대기 <b>0</b></div>
-            <div class="floating-tag tag-two">새 문서 <b>+1</b></div>
-          </div>
-        </div>
-      </section>
+        </article>
+      </div>
+    </section>
 
-      <section id="quiz-screen" class="screen quiz-screen">
-        <div class="workspace">
-          <aside class="side-nav" aria-hidden="true">
-            <div class="nav-home">업무포털 홈</div>
-            <div class="nav-item active">업무성향 진단 <b>진행중</b></div>
-            <div class="nav-item">전자문서함 <span>0</span></div>
-            <div class="nav-item">결재 대기</div>
-            <div class="nav-item">주간업무</div>
-          </aside>
-          <div class="quiz-workarea">
-            <div class="breadcrumb">업무포털 &gt; 신규임용자 &gt; 업무성향 진단</div>
-            <div class="quiz-card">
-              <div class="quiz-topline">
-                <div><span>업무성향 진단서</span><b id="question-number">01 / 12</b></div>
-                <button id="quit-button" class="text-button" type="button">처음으로</button>
-              </div>
-              <div class="progress-track"><span id="progress-bar"></span></div>
-              <div id="question-content" class="question-content"></div>
-              <div id="answer-list" class="answer-list"></div>
-              <p class="answer-hint">가장 나다운 답변을 선택해 주세요. 정답은 없습니다.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+    <section id="quiz-screen" class="screen quiz-screen">
+      <div class="document-statusbar"><b>전자문서 작성</b><span>보존기간 <strong>3년</strong></span><span>공개여부 <strong>공개</strong></span><span>처리상태 <strong>작성중</strong></span><span>결재상태 <strong>대기</strong></span></div>
+      <div class="quiz-layout">
+        <aside class="review-index"><p>성향검토 목차</p><ol id="question-index"></ol></aside>
+        <article class="question-sheet">
+          <header class="question-header">
+            <div><span>검토의견 작성</span><b id="question-category">전자문서함</b></div>
+            <button id="quit-button" type="button">기안 취소</button>
+          </header>
+          <div class="progress-copy"><b id="question-count">문항 01/15</b><span id="progress-label">검토 진행률 7%</span></div>
+          <div class="ruled-progress" aria-hidden="true"><span id="progress-bar"></span></div>
+          <section class="question-area">
+            <p class="field-label">검토 문항</p>
+            <h2 id="question-text" class="typing-text"></h2>
+            <p class="field-label">검토의견 선택란 <small>가장 나다운 의견 1건을 선택하십시오.</small></p>
+            <div id="answer-list" class="answer-list"></div>
+          </section>
+          <footer class="sheet-footer"><span>※ 본 문서는 자동 저장됩니다.</span><b>임시저장 완료</b></footer>
+        </article>
+      </div>
+    </section>
 
-      <section id="inbox-screen" class="screen inbox-screen">
-        <div class="workspace">
-          <aside class="side-nav inbox-nav" aria-hidden="true">
-            <div class="nav-home">전자문서함</div>
-            <div class="nav-item active">받은 문서 <span>1</span></div>
-            <div class="nav-item">결재 대기</div>
-            <div class="nav-item">처리 완료</div>
-            <div class="nav-item">개인 보관함</div>
-          </aside>
-          <div class="inbox-workarea">
-            <div class="inbox-header">
-              <div><p>전자문서함</p><h2>받은 문서</h2></div>
-              <span class="sync-status"><i></i> 방금 동기화됨</span>
-            </div>
-            <div class="mail-toolbar"><button type="button">전체 문서</button><span>총 <b>1</b>건</span></div>
-            <button id="result-mail" class="mail-item" type="button">
-              <span class="unread-dot"></span>
-              <span class="mail-icon">공문</span>
-              <span class="mail-main"><b>정기인사 알림</b><small>신규주무관님의 업무성향 진단에 따른 추천 부서 안내</small></span>
-              <span class="mail-sender">인사운영과</span>
-              <span class="mail-time">방금 전</span>
-            </button>
-            <div class="inbox-empty"><span>✓</span><p>모든 새 문서를 확인했습니다.</p></div>
-          </div>
-        </div>
-      </section>
+    <section id="progress-screen" class="screen progress-screen">
+      <div class="progress-dialog">
+        <div class="dialog-title">검토 진행 현황 <button id="progress-close" type="button">×</button></div>
+        <div class="progress-stamp">중간<br>검토</div>
+        <p>신규공무원 성향검토 기안문</p><h2 id="review-percent">검토 진행률 33%</h2>
+        <div class="review-meter"><span id="review-meter-bar"></span></div>
+        <dl><div><dt>검토 완료</dt><dd id="review-complete">05문항</dd></div><div><dt>검토 대기</dt><dd id="review-remain">10문항</dd></div><div><dt>저장 상태</dt><dd>자동저장 완료</dd></div></dl>
+        <button id="continue-button" class="action-button primary" type="button">계속 검토하기 <b>→</b></button>
+      </div>
+    </section>
 
-      <section id="result-screen" class="screen result-screen">
-        <div class="document-stage">
-          <div class="document-toolbar">
-            <button id="back-inbox" type="button">← 문서함</button>
-            <div><span>문서 열람</span><b>보안등급 · 일반</b></div>
-            <button id="restart-button" type="button">다시 진단</button>
-          </div>
-          <article id="result-document" class="result-document"></article>
+    <section id="inbox-screen" class="screen inbox-screen">
+      <aside class="side-menu inbox-menu"><p>전자문서함</p><b>수신 문서 <em>1</em></b><span>결재 대기함</span><span>처리 완료함</span><span>개인 보관함</span></aside>
+      <div class="inbox-panel">
+        <div class="page-heading"><div><small>전자문서함 &gt; 수신 문서</small><h1>수신 문서 목록</h1></div><span class="new-count">새 문서 <b>1</b>건</span></div>
+        <div class="inbox-toolbar"><button type="button">전체</button><button type="button">미열람</button><span>총 1건</span></div>
+        <div class="document-table" role="table" aria-label="수신 문서 목록">
+          <div class="document-row table-head" role="row"><span>상태</span><span>문서번호</span><span>문서제목</span><span>발신 / 수신</span><span>처리상태</span><span>보안등급</span><span>도착시각</span></div>
+          <button id="result-mail" class="document-row mail-row" type="button" role="row">
+            <span><i class="unread-dot"></i>미열람</span><span>인사-2026-0001</span><strong>정기인사 알림<small>신규공무원 업무성향 추천부서 안내</small></strong><span>인사담당<small>신규공무원 본인</small></span><span class="waiting">열람대기</span><span>재미용</span><span>방금 전</span>
+          </button>
         </div>
-      </section>
-    </main>
-  </div>
+        <div class="inbox-guide"><span>!</span><p><b>새 문서가 도착했습니다.</b><br>‘정기인사 알림’을 클릭하여 문서를 열람하세요.</p></div>
+      </div>
+    </section>
 
-  <div id="toast" class="toast" role="status"></div>
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+    <section id="opening-screen" class="screen opening-screen">
+      <div class="opening-card"><div class="opening-paper"><span>정기인사 알림</span></div><div class="opening-stamp">접수<br>열람</div><p id="opening-copy">열람 처리 중...</p><div class="loading-line"><span></span></div></div>
+    </section>
+
+    <section id="result-screen" class="screen result-screen">
+      <div class="result-actions"><button id="back-inbox" type="button">← 수신목록</button><span>문서 열람 완료</span><div><button id="save-image" type="button">공문 이미지 저장</button><button id="restart-button" type="button">다시하기</button></div></div>
+      <div class="capture-viewport">
+        <article id="share-card" class="official-document">
+          <header class="official-header"><div class="city-mark"><span>군산</span><b>GUNSAN CITY</b></div><div class="security-label">보안등급<br><b>재미용</b></div></header>
+          <h1 class="official-title result-typing">정기인사 알림</h1>
+          <dl class="meta-table result-meta"><div><dt>문서번호</dt><dd>인사-2026-0001</dd></div><div><dt>시행일자</dt><dd id="result-date">2026.06.08.</dd></div><div><dt>수신</dt><dd>신규공무원 본인</dd></div><div><dt>공개여부</dt><dd>공개</dd></div></dl>
+          <div class="result-intro"><p>귀하의 업무성향 검토 결과, 다음 부서를 추천 부서로 알립니다.</p><span class="result-stamp">열람<br>완료</span></div>
+          <section class="department-result"><p>추천 부서</p><h2 id="department-name" class="result-typing delay">기획예산과</h2><b id="department-title">큰 그림을 빈틈없이 그리는 전략 설계자</b></section>
+          <section class="official-body"><div><h3>1. 추천 사유</h3><p id="department-summary"></p></div><div><h3>2. 주요 업무 강점</h3><ul id="strength-list"></ul></div><div class="scene-box"><h3>3. 예상 업무 장면</h3><p id="department-scene"></p></div></section>
+          <footer class="official-footer"><div><b>직인생략</b><span>※ 실제 인사배치와 무관한 재미용 테스트입니다.</span></div><div class="approval-line"><span>담당자<i>검토</i></span><span>계장님<i></i></span><span>과장님<i></i></span><span>국장님<i></i></span></div></footer>
+        </article>
+      </div>
+    </section>
+    <div id="toast" class="toast" role="status"></div>
+  </main>
+  <script src="data.js"></script><script src="app.js"></script>
 </body>
 </html>

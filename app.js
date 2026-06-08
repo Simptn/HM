@@ -4,11 +4,12 @@
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const total = TEST_DATA.questions.length;
   const scoreKeys = ["PLAN", "RULE", "PEOPLE", "DATA", "FIELD", "GROWTH", "CULTURE", "CARE"];
-  const maximumScores = Object.fromEntries(scoreKeys.map((key) => [key, TEST_DATA.questions.reduce((totalScore, question) => totalScore + Math.max(0, ...question.answers.map((answer) => answer.scores[key] || 0)), 0)]));
+  const storageKey = 'gunsan-department-test-latest';
   let current = 0;
   let selectedAnswers = Array(total).fill(null);
   let scores = createEmptyScores();
   let result = TEST_DATA.buildDepartmentResult(TEST_DATA.getCandidateDepartments()[0]);
+  let alternatives = [];
   let typingTimer;
   const shownCheckpoints = new Set();
 
@@ -29,12 +30,32 @@
     $('#header-doc-number').textContent = number;
   }
 
+  function saveLatestState(ranked = []) {
+    const state = { selectedAnswers, resultIds: ranked.slice(0, 3).map(({ department }) => department.id) };
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  }
+
+  function restoreLatestState() {
+    try {
+      const state = JSON.parse(localStorage.getItem(storageKey));
+      if (!Array.isArray(state?.selectedAnswers) || state.selectedAnswers.length !== total) return;
+      selectedAnswers = state.selectedAnswers.map((answer, index) => Number.isInteger(answer) && TEST_DATA.questions[index].answers[answer] ? answer : null);
+      recalculateScores();
+      current = selectedAnswers.findIndex((answer) => answer === null);
+      if (current < 0) current = total;
+    } catch (error) {
+      localStorage.removeItem(storageKey);
+    }
+  }
+
   function reset() {
     clearInterval(typingTimer);
     current = 0;
     selectedAnswers = Array(total).fill(null);
     scores = createEmptyScores();
+    alternatives = [];
     shownCheckpoints.clear();
+    localStorage.removeItem(storageKey);
     setHeader('기안대기');
     showScreen('start-screen');
   }
@@ -95,6 +116,7 @@
   function selectAnswer(answerIndex, button) {
     selectedAnswers[current] = answerIndex;
     recalculateScores();
+    saveLatestState();
     document.querySelectorAll('.answer-button').forEach((item) => {
       item.classList.toggle('selected', item === button);
       item.disabled = true;
@@ -129,17 +151,10 @@
 
   function completeTest() {
     recalculateScores();
-    const userVector = Object.fromEntries(scoreKeys.map((key) => [key, maximumScores[key] ? scores[key] / maximumScores[key] : 0]));
-    const departmentScore = (department) => {
-      const deptVector = Object.fromEntries(scoreKeys.map((key) => [key, (department.vector[key] || 0) / 5]));
-      const dot = scoreKeys.reduce((sum, key) => sum + userVector[key] * deptVector[key], 0);
-      const userMagnitude = Math.sqrt(scoreKeys.reduce((sum, key) => sum + userVector[key] ** 2, 0));
-      const deptMagnitude = Math.sqrt(scoreKeys.reduce((sum, key) => sum + deptVector[key] ** 2, 0));
-      return deptMagnitude ? dot / ((userMagnitude || 1) * deptMagnitude) : 0;
-    };
-    const candidates = TEST_DATA.getCandidateDepartments();
-    const winner = candidates.reduce((best, department) => departmentScore(department) > departmentScore(best) ? department : best, candidates[0]);
-    result = TEST_DATA.buildDepartmentResult(winner);
+    const { ranked } = TEST_DATA.calculateDepartmentRanking(selectedAnswers);
+    result = TEST_DATA.buildDepartmentResult(ranked[0].department);
+    alternatives = ranked.slice(1, 3).map(({ department }) => TEST_DATA.buildDepartmentResult(department));
+    saveLatestState(ranked);
     setHeader('수신완료', '인사-2026-0001');
     showScreen('inbox-screen');
     const mail = $('#result-mail');
@@ -162,7 +177,9 @@
     $('#department-scene').textContent = result.workSummary;
     $('#department-caution').textContent = result.caution;
     $('#department-bureau').textContent = result.bureau;
-    $('#strength-list').innerHTML = result.strengths.map((strength) => `<li>${strength}</li>`).join('');
+    $('#strength-list').innerHTML = result.strengths.slice(0, 3).map((strength) => `<li>${strength}</li>`).join('');
+    $('#alternative-one').textContent = alternatives[0]?.name || '-';
+    $('#alternative-two').textContent = alternatives[1]?.name || '-';
     setHeader('열람완료', '인사-2026-0001');
     showScreen('result-screen');
     if (reducedMotion.matches) {
@@ -216,7 +233,7 @@
     setTimeout(() => toast.classList.remove('show'), 2200);
   }
 
-  $('#start-button').addEventListener('click', () => { setHeader('작성중'); showScreen('quiz-screen'); renderQuestion(); });
+  $('#start-button').addEventListener('click', () => { setHeader('작성중'); if (current >= total) return completeTest(); showScreen('quiz-screen'); renderQuestion(); });
   $('#continue-button').addEventListener('click', () => { showScreen('quiz-screen'); renderQuestion(); });
   $('#progress-close').addEventListener('click', () => { showScreen('quiz-screen'); renderQuestion(); });
   $('#previous-button').addEventListener('click', previousQuestion);
@@ -226,4 +243,6 @@
   $('#back-inbox').addEventListener('click', () => showScreen('inbox-screen'));
   $('#restart-button').addEventListener('click', reset);
   $('#save-image').addEventListener('click', saveShareImage);
+
+  restoreLatestState();
 })();

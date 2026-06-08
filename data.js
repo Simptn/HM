@@ -1318,4 +1318,51 @@ function buildDepartmentResult(department) {
   };
 }
 
-const TEST_DATA = { questions, departments, featuredDepartmentIds, useAllDepartments: USE_ALL_DEPARTMENTS, getCandidateDepartments, buildDepartmentResult };
+const scoreKeys = Object.keys(tendencyLabels);
+
+function getTopKeys(vector, count = 2) {
+  return scoreKeys
+    .map((key, index) => ({ key, value: vector[key] || 0, index }))
+    .sort((a, b) => b.value - a.value || a.index - b.index)
+    .slice(0, count)
+    .map(({ key }) => key);
+}
+
+function calculateDepartmentRanking(selectedAnswers) {
+  const scores = Object.fromEntries(scoreKeys.map((key) => [key, 0]));
+  selectedAnswers.forEach((answerIndex, questionIndex) => {
+    const answer = questions[questionIndex]?.answers[answerIndex];
+    if (!answer) return;
+    Object.entries(answer.scores).forEach(([key, value]) => { scores[key] += value; });
+  });
+
+  const maximumScores = Object.fromEntries(scoreKeys.map((key) => [key, questions.reduce((sum, question) => {
+    return sum + Math.max(0, ...question.answers.map((answer) => answer.scores[key] || 0));
+  }, 0)]));
+  const userVector = Object.fromEntries(scoreKeys.map((key) => [key, Math.max(0, scores[key]) / (maximumScores[key] || 1)]));
+  const userMagnitude = Math.sqrt(scoreKeys.reduce((sum, key) => sum + userVector[key] ** 2, 0)) || 1;
+  const userTopKeys = getTopKeys(userVector);
+
+  const ranked = getCandidateDepartments().map((department) => {
+    const departmentVector = Object.fromEntries(scoreKeys.map((key) => [key, (department.vector[key] || 0) / 5]));
+    const dotProduct = scoreKeys.reduce((sum, key) => sum + userVector[key] * departmentVector[key], 0);
+    const departmentMagnitude = Math.sqrt(scoreKeys.reduce((sum, key) => sum + departmentVector[key] ** 2, 0)) || 1;
+    const topOverlap = getTopKeys(departmentVector).filter((key) => userTopKeys.includes(key)).length;
+    // 최종 동점에서 PLAN/PEOPLE 중심 부서가 반복 노출되는 것을 아주 작게 억제한다.
+    const commonTendencyPenalty = ((department.vector.PLAN || 0) + (department.vector.PEOPLE || 0)) / 10;
+    return { department, similarity: dotProduct / (userMagnitude * departmentMagnitude), topOverlap, commonTendencyPenalty };
+  });
+
+  const epsilon = 1e-10;
+  ranked.sort((a, b) => {
+    const similarityDifference = b.similarity - a.similarity;
+    if (Math.abs(similarityDifference) > epsilon) return similarityDifference;
+    if (b.topOverlap !== a.topOverlap) return b.topOverlap - a.topOverlap;
+    if (a.commonTendencyPenalty !== b.commonTendencyPenalty) return a.commonTendencyPenalty - b.commonTendencyPenalty;
+    return a.department.id.localeCompare(b.department.id, 'en');
+  });
+
+  return { scores, userVector, ranked };
+}
+
+const TEST_DATA = { questions, departments, featuredDepartmentIds, useAllDepartments: USE_ALL_DEPARTMENTS, getCandidateDepartments, buildDepartmentResult, calculateDepartmentRanking };

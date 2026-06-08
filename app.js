@@ -190,37 +190,98 @@
     }
   }
 
+  function loadHtml2Canvas() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      script.crossOrigin = 'anonymous';
+      script.onload = () => resolve(window.html2canvas);
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function canvasToBlob(canvas) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('PNG 변환 실패')), 'image/png');
+    });
+  }
+
+  async function renderCardWithSvgFallback(card) {
+    const css = await fetch('style.css').then((response) => response.text());
+    const clone = card.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    clone.style.width = `${card.offsetWidth}px`;
+    clone.style.height = `${card.offsetHeight}px`;
+    const markup = `<div xmlns="http://www.w3.org/1999/xhtml"><style>${css}</style>${clone.outerHTML}</div>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${card.offsetWidth}" height="${card.offsetHeight}"><foreignObject width="100%" height="100%">${markup}</foreignObject></svg>`;
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+    try {
+      const image = new Image();
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+        image.src = url;
+      });
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
+      canvas.width = card.offsetWidth * scale;
+      canvas.height = card.offsetHeight * scale;
+      const context = canvas.getContext('2d');
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.scale(scale, scale);
+      context.drawImage(image, 0, 0);
+      return canvas;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function createResultCardPng() {
+    const card = $('#result-card');
+    try {
+      const html2canvas = await loadHtml2Canvas();
+      return canvasToBlob(await html2canvas(card, {
+        backgroundColor: '#ffffff',
+        logging: false,
+        scale: Math.min(3, Math.max(2, window.devicePixelRatio || 1)),
+        useCORS: true
+      }));
+    } catch (error) {
+      return canvasToBlob(await renderCardWithSvgFallback(card));
+    }
+  }
+
+  function downloadBlob(blob) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = 'gunsan-dept-result.png';
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   async function saveShareImage() {
-    const card = $('#share-card');
     showToast('공문 이미지를 생성하고 있습니다.');
     try {
-      const css = await fetch('style.css').then((response) => response.text());
-      const clone = card.cloneNode(true);
-      clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-      clone.style.width = `${card.offsetWidth}px`;
-      clone.style.height = `${card.offsetHeight}px`;
-      const markup = `<div xmlns="http://www.w3.org/1999/xhtml"><style>${css}</style>${clone.outerHTML}</div>`;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${card.offsetWidth}" height="${card.offsetHeight}"><foreignObject width="100%" height="100%">${markup}</foreignObject></svg>`;
-      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const image = new Image();
-      image.onload = () => {
-        const canvas = document.createElement('canvas');
-        const scale = 2;
-        canvas.width = card.offsetWidth * scale;
-        canvas.height = card.offsetHeight * scale;
-        const context = canvas.getContext('2d');
-        context.scale(scale, scale);
-        context.drawImage(image, 0, 0);
-        URL.revokeObjectURL(url);
-        const link = document.createElement('a');
-        link.download = `정기인사-알림-${result.name}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        showToast('공문 이미지를 저장했습니다.');
-      };
-      image.onerror = () => { URL.revokeObjectURL(url); showToast('이미지 저장에 실패했습니다. 브라우저 캡처를 이용해 주세요.'); };
-      image.src = url;
+      const blob = await createResultCardPng();
+      const file = new File([blob], 'gunsan-dept-result.png', { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: '정기인사 알림', text: '군산시 추천 부서 테스트 결과입니다.' });
+          showToast('공문 이미지를 공유했습니다.');
+          return;
+        } catch (shareError) {
+          if (shareError.name === 'AbortError') {
+            showToast('공유를 취소했습니다.');
+            return;
+          }
+        }
+      }
+      downloadBlob(blob);
+      showToast('공문 이미지를 저장했습니다.');
     } catch (error) {
       showToast('이미지 저장에 실패했습니다. 브라우저 캡처를 이용해 주세요.');
     }

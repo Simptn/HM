@@ -3,13 +3,22 @@
   const screens = [...document.querySelectorAll('.screen')];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const total = TEST_DATA.questions.length;
+  const scoreKeys = ["PLAN", "RULE", "PEOPLE", "DATA", "FIELD", "GROWTH", "CULTURE", "CARE"];
+  const maximumScores = Object.fromEntries(scoreKeys.map((key) => [key, TEST_DATA.questions.reduce((totalScore, question) => totalScore + Math.max(0, ...question.answers.map((answer) => answer.scores[key] || 0)), 0)]));
   let current = 0;
-  let scores = { plan: 0, people: 0, action: 0, detail: 0 };
+  let selectedAnswers = Array(total).fill(null);
+  let scores = createEmptyScores();
   let result = TEST_DATA.departments[0];
+  let typingTimer;
+  const shownCheckpoints = new Set();
 
   const dateText = new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   $('#draft-date').textContent = dateText;
   $('#result-date').textContent = dateText;
+
+  function createEmptyScores() {
+    return Object.fromEntries(scoreKeys.map((key) => [key, 0]));
+  }
 
   function showScreen(id) {
     screens.forEach((screen) => screen.classList.toggle('is-active', screen.id === id));
@@ -21,13 +30,17 @@
   }
 
   function reset() {
+    clearInterval(typingTimer);
     current = 0;
-    scores = { plan: 0, people: 0, action: 0, detail: 0 };
+    selectedAnswers = Array(total).fill(null);
+    scores = createEmptyScores();
+    shownCheckpoints.clear();
     setHeader('기안대기');
     showScreen('start-screen');
   }
 
   function typeText(element, text, speed = 22, done) {
+    clearInterval(typingTimer);
     element.textContent = '';
     if (reducedMotion.matches) {
       element.textContent = text;
@@ -36,61 +49,88 @@
     }
     element.classList.add('typing');
     let index = 0;
-    const timer = setInterval(() => {
+    typingTimer = setInterval(() => {
       element.textContent += text[index];
       index += 1;
       if (index >= text.length) {
-        clearInterval(timer);
+        clearInterval(typingTimer);
         element.classList.remove('typing');
         done?.();
       }
     }, speed);
   }
 
+  function recalculateScores() {
+    scores = createEmptyScores();
+    selectedAnswers.forEach((answerIndex, questionIndex) => {
+      if (answerIndex === null) return;
+      Object.entries(TEST_DATA.questions[questionIndex].answers[answerIndex].scores).forEach(([key, value]) => {
+        scores[key] += value;
+      });
+    });
+  }
+
   function renderIndex() {
-    $('#question-index').innerHTML = Array.from({ length: total }, (_, index) => `<li class="${index < current ? 'done' : index === current ? 'current' : ''}">${String(index + 1).padStart(2, '0')}</li>`).join('');
+    $('#question-index').innerHTML = Array.from({ length: total }, (_, index) => `<li class="${selectedAnswers[index] !== null ? 'done' : index === current ? 'current' : ''}">${String(index + 1).padStart(2, '0')}</li>`).join('');
   }
 
   function renderQuestion() {
     const item = TEST_DATA.questions[current];
-    const percent = Math.round(((current + 1) / total) * 100);
-    $('#question-category').textContent = item.category;
+    const answeredCount = selectedAnswers.filter((answer) => answer !== null).length;
+    const percent = Math.round((answeredCount / total) * 100);
+    $('#question-category').textContent = `업무상황 검토 · ${item.id.toUpperCase()}`;
     $('#question-count').textContent = `문항 ${String(current + 1).padStart(2, '0')}/${total}`;
     $('#progress-label').textContent = `검토 진행률 ${percent}%`;
     $('#progress-bar').style.width = `${percent}%`;
+    $('#previous-button').disabled = current === 0;
     renderIndex();
-    typeText($('#question-text'), item.question);
+    typeText($('#question-text'), item.text);
     $('#answer-list').innerHTML = item.answers.map((answer, index) => `
-      <button class="answer-button" type="button" data-index="${index}">
+      <button class="answer-button ${selectedAnswers[current] === index ? 'selected' : ''}" type="button" data-index="${index}">
         <span>${index + 1}</span><span>${answer.text}</span><i class="reviewed-stamp">검토<br>완료</i>
       </button>`).join('');
     document.querySelectorAll('.answer-button').forEach((button) => button.addEventListener('click', () => selectAnswer(Number(button.dataset.index), button)));
   }
 
   function selectAnswer(answerIndex, button) {
-    if (button.classList.contains('selected')) return;
-    button.classList.add('selected');
-    document.querySelectorAll('.answer-button').forEach((item) => { item.disabled = true; });
-    Object.entries(TEST_DATA.questions[current].answers[answerIndex].scores).forEach(([key, value]) => { scores[key] += value; });
+    selectedAnswers[current] = answerIndex;
+    recalculateScores();
+    document.querySelectorAll('.answer-button').forEach((item) => {
+      item.classList.toggle('selected', item === button);
+      item.disabled = true;
+    });
     setTimeout(() => {
       current += 1;
       if (current >= total) return completeTest();
-      if (current === 5 || current === 10) return showProgress();
+      if ((current === 5 || current === 10) && !shownCheckpoints.has(current)) {
+        shownCheckpoints.add(current);
+        return showProgress();
+      }
       renderQuestion();
     }, reducedMotion.matches ? 0 : 430);
   }
 
+  function previousQuestion() {
+    if (current === 0) return;
+    current -= 1;
+    showScreen('quiz-screen');
+    renderQuestion();
+  }
+
   function showProgress() {
-    const percent = Math.round((current / total) * 100);
+    const answeredCount = selectedAnswers.filter((answer) => answer !== null).length;
+    const percent = Math.round((answeredCount / total) * 100);
     $('#review-percent').textContent = `검토 진행률 ${percent}%`;
     $('#review-meter-bar').style.width = `${percent}%`;
-    $('#review-complete').textContent = `${String(current).padStart(2, '0')}문항`;
-    $('#review-remain').textContent = `${String(total - current).padStart(2, '0')}문항`;
+    $('#review-complete').textContent = `${String(answeredCount).padStart(2, '0')}문항`;
+    $('#review-remain').textContent = `${String(total - answeredCount).padStart(2, '0')}문항`;
     showScreen('progress-screen');
   }
 
   function completeTest() {
-    const winner = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+    recalculateScores();
+    const normalizedScore = (key) => scores[key] / maximumScores[key];
+    const winner = scoreKeys.reduce((best, key) => normalizedScore(key) > normalizedScore(best) ? key : best, scoreKeys[0]);
     result = TEST_DATA.departments.find((department) => department.key === winner) || TEST_DATA.departments[0];
     setHeader('수신완료', '인사-2026-0001');
     showScreen('inbox-screen');
@@ -169,6 +209,7 @@
   $('#start-button').addEventListener('click', () => { setHeader('작성중'); showScreen('quiz-screen'); renderQuestion(); });
   $('#continue-button').addEventListener('click', () => { showScreen('quiz-screen'); renderQuestion(); });
   $('#progress-close').addEventListener('click', () => { showScreen('quiz-screen'); renderQuestion(); });
+  $('#previous-button').addEventListener('click', previousQuestion);
   $('#quit-button').addEventListener('click', reset);
   $('#home-button').addEventListener('click', reset);
   $('#result-mail').addEventListener('click', openDocument);

@@ -11,12 +11,12 @@ const questions = [
   },
   {
     id: "q02",
-    text: "갑자기 “이거 내일 오전까지 자료 좀”이라는 요청이 왔다.",
+    text: "갑자기 처음 보는 분야의 문제를 내일까지 파악해 달라는 요청이 왔다. 손이 먼저 가는 곳은?",
     answers: [
-      { text: "필요한 목차부터 잡고 빈칸을 채워 넣는다", scores: { PLAN: 2 } },
-      { text: "기존 제출자료와 숫자가 안 맞을까 봐 먼저 대조한다", scores: { RULE: 1, DATA: 1 } },
-      { text: "왜 필요한 자료인지 물어보고 포인트를 맞춘다", scores: { PEOPLE: 1, PLAN: 1 } },
-      { text: "관련 현황을 직접 확인해야 마음이 놓인다", scores: { FIELD: 2 } }
+      { text: "이전 문서와 처리 순서를 찾아 전체 흐름부터 그린다", scores: { PLAN: 1, RULE: 1 }, specialtyScores: { ADMIN: 2 } },
+      { text: "숫자와 기록을 모아 반복되는 패턴이 있는지 살핀다", scores: { DATA: 2 }, specialtyScores: { DIGITAL: 2 } },
+      { text: "지도나 배치도를 펼쳐 실제 위치와 동선을 확인한다", scores: { FIELD: 2 }, specialtyScores: { INFRA: 2 } },
+      { text: "누가 가장 불편해지는지부터 듣고 영향 범위를 잡는다", scores: { PEOPLE: 1, CARE: 1 }, specialtyScores: { COMMUNITY: 1, HEALTH: 1 } }
     ]
   },
   {
@@ -41,12 +41,12 @@ const questions = [
   },
   {
     id: "q05",
-    text: "행정사무감사 자료를 준비한다면 가장 긴장되는 건?",
+    text: "회의에서 낯선 전문용어가 계속 나온다. 당신이 이해하는 방식에 가까운 것은?",
     answers: [
-      { text: "“이 사업 왜 했어요?”라는 질문", scores: { PLAN: 2 } },
-      { text: "“근거가 뭐예요?”라는 질문", scores: { RULE: 2 } },
-      { text: "“효과가 있었나요?”라는 질문", scores: { DATA: 1, GROWTH: 1 } },
-      { text: "“민원은 없었나요?”라는 질문", scores: { PEOPLE: 1, CARE: 1 } }
+      { text: "관련 기준과 업무 분장을 찾아 내 일과 연결해 본다", scores: { RULE: 1, PLAN: 1 }, specialtyScores: { ADMIN: 2 } },
+      { text: "표나 그래프로 바꿔 수치 사이의 관계를 확인한다", scores: { DATA: 2 }, specialtyScores: { DIGITAL: 2 } },
+      { text: "현장 사진이나 구조도를 보며 실제 모습을 떠올린다", scores: { FIELD: 2 }, specialtyScores: { INFRA: 2 } },
+      { text: "그 변화가 사람의 생활이나 안전에 미칠 영향을 묻는다", scores: { CARE: 1, PEOPLE: 1 }, specialtyScores: { HEALTH: 1, COMMUNITY: 1 } }
     ]
   },
   {
@@ -61,12 +61,12 @@ const questions = [
   },
   {
     id: "q07",
-    text: "보조금 정산 서류를 검토하는 상황. 당신에게 제일 거슬리는 것은?",
+    text: "업무 중 예상 밖의 빈 시간이 생겼다. 괜히 한번 들여다보고 싶은 것은?",
     answers: [
-      { text: "증빙은 있는데 사업 목적과 살짝 안 맞는 지출", scores: { RULE: 2 } },
-      { text: "금액 합계가 1원이라도 안 맞는 서류", scores: { DATA: 2 } },
-      { text: "사진은 많은데 실제 성과가 잘 안 보이는 결과보고", scores: { PLAN: 1, GROWTH: 1 } },
-      { text: "참여자 입장에서 이 사업이 도움이 됐는지 알 수 없는 보고서", scores: { PEOPLE: 1, CARE: 1 } }
+      { text: "자주 쓰는 서식과 처리 절차를 더 간단하게 만드는 법", scores: { PLAN: 1, RULE: 1 }, specialtyScores: { ADMIN: 2 } },
+      { text: "쌓여 있는 자료를 자동으로 정리하거나 시각화하는 법", scores: { DATA: 2 }, specialtyScores: { DIGITAL: 2 } },
+      { text: "도로·시설·장비가 실제로 움직이는 방식", scores: { FIELD: 2 }, specialtyScores: { INFRA: 2 } },
+      { text: "지역의 먹거리·환경·산업이 앞으로 바뀔 가능성", scores: { GROWTH: 1, CULTURE: 1 }, specialtyScores: { ENVIRONMENT: 1, INDUSTRY: 1 } }
     ]
   },
   {
@@ -91,12 +91,12 @@ const questions = [
   },
   {
     id: "q10",
-    text: "전화가 계속 울리는 날, 당신이 제일 먼저 무너지는 포인트는?",
+    text: "하루 동안 한 가지 일에만 집중할 수 있다면 가장 덜 지치는 일은?",
     answers: [
-      { text: "처리 흐름이 꼬여서 누가 뭘 했는지 모를 때", scores: { PLAN: 1, DATA: 1 } },
-      { text: "같은 설명을 계속 반복해야 할 때", scores: { DATA: 1, PEOPLE: -1 } },
-      { text: "규정상 안 되는데 감정적으로 설득해야 할 때", scores: { RULE: 1, PEOPLE: 1 } },
-      { text: "현장은 난리인데 사무실에서는 자료만 달라고 할 때", scores: { FIELD: 2 } }
+      { text: "여러 부서의 일정과 문서를 맞춰 하나의 안으로 정리하기", scores: { PLAN: 2 }, specialtyScores: { ADMIN: 2 } },
+      { text: "오류가 나는 자료나 시스템의 원인을 차근차근 찾기", scores: { DATA: 2 }, specialtyScores: { DIGITAL: 2 } },
+      { text: "밖을 돌며 시설 상태와 달라진 점을 직접 확인하기", scores: { FIELD: 2 }, specialtyScores: { INFRA: 1, ENVIRONMENT: 1 } },
+      { text: "도움이 필요한 사람의 상황을 듣고 가능한 방법 찾기", scores: { PEOPLE: 1, CARE: 1 }, specialtyScores: { HEALTH: 1, COMMUNITY: 1 } }
     ]
   },
   {
@@ -131,12 +131,12 @@ const questions = [
   },
   {
     id: "q14",
-    text: "여러 부서 협조가 필요한 일이 생겼다. 당신이 제일 싫은 상황은?",
+    text: "지역에 새로운 변화가 생긴다는 소식을 들었다. 무심코 가장 먼저 궁금해지는 것은?",
     answers: [
-      { text: "주관부서가 불명확한 상황", scores: { PLAN: 2 } },
-      { text: "회신 기한은 있는데 자료 기준이 제각각인 상황", scores: { DATA: 1, RULE: 1 } },
-      { text: "회의는 했는데 아무도 책임지고 움직이지 않는 상황", scores: { PEOPLE: 1, PLAN: 1 } },
-      { text: "현장 상황을 모르는 상태로 결론부터 정해지는 상황", scores: { FIELD: 2 } }
+      { text: "어느 부서가 맡고 어떤 절차로 추진되는지", scores: { PLAN: 1, RULE: 1 }, specialtyScores: { ADMIN: 2 } },
+      { text: "일자리와 지역 산업에 어떤 기회가 생기는지", scores: { GROWTH: 2 }, specialtyScores: { INDUSTRY: 2 } },
+      { text: "주변 환경과 생활 기반시설에는 어떤 변화가 있는지", scores: { FIELD: 1, DATA: 1 }, specialtyScores: { ENVIRONMENT: 1, INFRA: 1 } },
+      { text: "주민들이 실제로 체감하고 참여할 수 있는지", scores: { PEOPLE: 1, CULTURE: 1 }, specialtyScores: { COMMUNITY: 1, HEALTH: 1 } }
     ]
   },
   {
@@ -1319,6 +1319,18 @@ function buildDepartmentResult(department) {
 }
 
 const scoreKeys = Object.keys(tendencyLabels);
+const specialtyKeys = ["ADMIN", "DIGITAL", "INFRA", "HEALTH", "ENVIRONMENT", "INDUSTRY", "COMMUNITY"];
+const departmentSpecialtyProfiles = {
+  saemangeum_policy: { INDUSTRY: 3, INFRA: 2 }, audit: { ADMIN: 4 }, population_response: { COMMUNITY: 3, ADMIN: 1 },
+  digital_info: { DIGITAL: 5 }, planning_budget: { ADMIN: 4, DIGITAL: 1 }, admin_support: { ADMIN: 5 },
+  public_relations: { COMMUNITY: 3, ADMIN: 1 }, open_civil_service: { COMMUNITY: 4, ADMIN: 1 }, safety_general: { INFRA: 3, ADMIN: 1 },
+  urban_planning: { INFRA: 4, ADMIN: 1 }, jobs_economy: { INDUSTRY: 4, COMMUNITY: 1 }, new_growth_industry: { INDUSTRY: 5, DIGITAL: 1 },
+  tourism_promotion: { COMMUNITY: 3, INDUSTRY: 1 }, urban_regeneration: { INFRA: 3, COMMUNITY: 2 }, transport_admin: { INFRA: 4, ADMIN: 1 },
+  smart_city: { DIGITAL: 4, INFRA: 2 }, port_marine: { INDUSTRY: 3, INFRA: 2 }, welfare_policy: { HEALTH: 3, COMMUNITY: 2 },
+  child_policy: { HEALTH: 3, COMMUNITY: 2 }, climate_environment: { ENVIRONMENT: 5 }, resource_circulation: { ENVIRONMENT: 4, INFRA: 1 },
+  infectious_disease: { HEALTH: 5 }, rural_support: { ENVIRONMENT: 3, INDUSTRY: 2 }, vehicle_registration: { ADMIN: 3, INFRA: 1 },
+  eup_myeon_dong: { COMMUNITY: 4, ADMIN: 1 }
+};
 
 function getTopKeys(vector, count = 2) {
   return scoreKeys
@@ -1342,15 +1354,31 @@ function calculateDepartmentRanking(selectedAnswers) {
   const userVector = Object.fromEntries(scoreKeys.map((key) => [key, Math.max(0, scores[key]) / (maximumScores[key] || 1)]));
   const userMagnitude = Math.sqrt(scoreKeys.reduce((sum, key) => sum + userVector[key] ** 2, 0)) || 1;
   const userTopKeys = getTopKeys(userVector);
+  const specialtyScores = Object.fromEntries(specialtyKeys.map((key) => [key, 0]));
+  selectedAnswers.forEach((answerIndex, questionIndex) => {
+    const specialty = questions[questionIndex]?.answers[answerIndex]?.specialtyScores;
+    if (!specialty) return;
+    Object.entries(specialty).forEach(([key, value]) => { specialtyScores[key] += value; });
+  });
+  const specialtyMagnitude = Math.sqrt(specialtyKeys.reduce((sum, key) => sum + specialtyScores[key] ** 2, 0)) || 1;
+  const specialtyTotal = specialtyKeys.reduce((sum, key) => sum + specialtyScores[key], 0) || 1;
+  const specialtyConcentration = Math.max(...specialtyKeys.map((key) => specialtyScores[key])) / specialtyTotal;
+  const specialtyWeight = Math.min(0.30, Math.max(0, (specialtyConcentration - 0.24) * 0.75));
 
   const ranked = getCandidateDepartments().map((department) => {
     const departmentVector = Object.fromEntries(scoreKeys.map((key) => [key, (department.vector[key] || 0) / 5]));
     const dotProduct = scoreKeys.reduce((sum, key) => sum + userVector[key] * departmentVector[key], 0);
     const departmentMagnitude = Math.sqrt(scoreKeys.reduce((sum, key) => sum + departmentVector[key] ** 2, 0)) || 1;
     const topOverlap = getTopKeys(departmentVector).filter((key) => userTopKeys.includes(key)).length;
-    // 최종 동점에서 PLAN/PEOPLE 중심 부서가 반복 노출되는 것을 아주 작게 억제한다.
+    const specialtyProfile = departmentSpecialtyProfiles[department.id] || {};
+    const specialtyProfileMagnitude = Math.sqrt(specialtyKeys.reduce((sum, key) => sum + (specialtyProfile[key] || 0) ** 2, 0)) || 1;
+    const specialtyDotProduct = specialtyKeys.reduce((sum, key) => sum + specialtyScores[key] * (specialtyProfile[key] || 0), 0);
+    const tendencySimilarity = dotProduct / (userMagnitude * departmentMagnitude);
+    const specialtySimilarity = specialtyDotProduct / (specialtyMagnitude * specialtyProfileMagnitude);
+    // 여러 간접 문항에서 같은 관심이 반복될 때만 보조 신호를 강화해 특수 부서의 우연한 추천을 막는다.
+    const similarity = tendencySimilarity * (1 - specialtyWeight) + specialtySimilarity * specialtyWeight;
     const commonTendencyPenalty = ((department.vector.PLAN || 0) + (department.vector.PEOPLE || 0)) / 10;
-    return { department, similarity: dotProduct / (userMagnitude * departmentMagnitude), topOverlap, commonTendencyPenalty };
+    return { department, similarity, tendencySimilarity, specialtySimilarity, topOverlap, commonTendencyPenalty };
   });
 
   const epsilon = 1e-10;
@@ -1362,7 +1390,7 @@ function calculateDepartmentRanking(selectedAnswers) {
     return a.department.id.localeCompare(b.department.id, 'en');
   });
 
-  return { scores, userVector, ranked };
+  return { scores, userVector, specialtyScores, specialtyWeight, ranked };
 }
 
 const TEST_DATA = { questions, departments, featuredDepartmentIds, useAllDepartments: USE_ALL_DEPARTMENTS, getCandidateDepartments, buildDepartmentResult, calculateDepartmentRanking };

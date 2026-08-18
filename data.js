@@ -21,12 +21,12 @@ const questions = [
   },
   {
     id: "q03",
-    text: "민원인이 “전에 들은 말이랑 다르다”고 한다.",
+    text: "일할 때 나도 모르게 자주 보이는 모습에 가장 가까운 것은?",
     answers: [
-      { text: "접수 경위와 이전 답변을 먼저 확인한다", scores: { DATA: 1, RULE: 1 } },
-      { text: "관련 규정과 처리 기준을 다시 확인한다", scores: { RULE: 2 } },
-      { text: "일단 왜 그렇게 안내받았는지 끝까지 듣는다", scores: { PEOPLE: 2 } },
-      { text: "말로 설명하기보다 실제 상황을 확인해야겠다고 생각한다", scores: { FIELD: 2 } }
+      { text: "해야 할 일을 순서대로 적어 두면 마음이 편하다", scores: { PLAN: 2 }, specialtyScores: { ADMIN: 1 } },
+      { text: "작은 오류나 앞뒤가 맞지 않는 부분이 먼저 눈에 들어온다", scores: { RULE: 1, DATA: 1 }, specialtyScores: { DIGITAL: 1 } },
+      { text: "사람마다 다르게 받아들이는 지점을 금방 알아차린다", scores: { PEOPLE: 2 }, specialtyScores: { COMMUNITY: 1 } },
+      { text: "설명만 듣기보다 직접 보거나 만져 봐야 이해가 빠르다", scores: { FIELD: 2 }, specialtyScores: { INFRA: 1 } }
     ]
   },
   {
@@ -111,12 +111,12 @@ const questions = [
   },
   {
     id: "q12",
-    text: "신규 발령자가 당신에게 “이 부서에서 제일 중요한 게 뭐예요?”라고 묻는다면?",
+    text: "새로운 일을 배울 때 가장 자연스러운 방식은?",
     answers: [
-      { text: "“기한 놓치면 끝이야. 캘린더부터 정리해.”", scores: { PLAN: 2 } },
-      { text: "“근거 남겨. 구두로 끝내지 마.”", scores: { RULE: 2 } },
-      { text: "“민원인 말은 끝까지 들어봐. 답은 그다음이야.”", scores: { PEOPLE: 2 } },
-      { text: "“현장 한번 가보면 문서가 다르게 보여.”", scores: { FIELD: 2 } }
+      { text: "전체 목적과 단계가 보이는 설명을 먼저 듣는다", scores: { PLAN: 2 }, specialtyScores: { ADMIN: 1 } },
+      { text: "매뉴얼과 실제 사례를 비교하며 기준을 익힌다", scores: { RULE: 1, DATA: 1 }, specialtyScores: { DIGITAL: 1 } },
+      { text: "잘하는 사람과 대화하며 맥락과 요령을 익힌다", scores: { PEOPLE: 2 }, specialtyScores: { COMMUNITY: 1 } },
+      { text: "일단 직접 해 보고 시행착오를 통해 익힌다", scores: { FIELD: 2 }, specialtyScores: { INFRA: 1 } }
     ]
   },
   {
@@ -147,6 +147,16 @@ const questions = [
       { text: "급해도 절차는 틀리면 안 된다", scores: { RULE: 2 } },
       { text: "이거 기다리는 사람이 있으면 오늘 설명은 해줘야 한다", scores: { PEOPLE: 1, CARE: 1 } },
       { text: "책상에서 판단 안 되면 바로 확인하고 끝내자", scores: { FIELD: 2 } }
+    ]
+  },
+  {
+    id: "q16",
+    text: "업무가 잘 풀렸을 때 가장 뿌듯하게 느껴지는 순간은?",
+    answers: [
+      { text: "복잡하던 일이 정리되어 모두가 다음 순서를 알게 됐을 때", scores: { PLAN: 2 }, specialtyScores: { ADMIN: 1 } },
+      { text: "숨어 있던 원인이나 규칙을 찾아 정확히 해결했을 때", scores: { DATA: 1, RULE: 1 }, specialtyScores: { DIGITAL: 1 } },
+      { text: "누군가 실제로 도움을 받았다고 말해 줄 때", scores: { PEOPLE: 1, CARE: 1 }, specialtyScores: { HEALTH: 1, COMMUNITY: 1 } },
+      { text: "눈에 보이는 공간이나 현장이 전보다 나아졌을 때", scores: { FIELD: 1, GROWTH: 1 }, specialtyScores: { INFRA: 1, ENVIRONMENT: 1 } }
     ]
   }
 ];
@@ -1390,7 +1400,11 @@ function calculateDepartmentRanking(selectedAnswers) {
     return a.department.id.localeCompare(b.department.id, 'en');
   });
 
-  return { scores, userVector, specialtyScores, specialtyWeight, ranked };
+  const scoreSummary = getTopKeys(userVector, 3).map((key) => ({
+    label: tendencyLabels[key],
+    score: Math.round(userVector[key] * 100)
+  }));
+  return { scores, userVector, scoreSummary, specialtyScores, specialtyWeight, ranked };
 }
 
 const TEST_DATA = { questions, departments, featuredDepartmentIds, useAllDepartments: USE_ALL_DEPARTMENTS, getCandidateDepartments, buildDepartmentResult, calculateDepartmentRanking };

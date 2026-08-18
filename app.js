@@ -10,6 +10,7 @@
   let scores = createEmptyScores();
   let result = TEST_DATA.buildDepartmentResult(TEST_DATA.getCandidateDepartments()[0]);
   let alternatives = [];
+  let scoreSummary = [];
   let typingTimer;
   const shownCheckpoints = new Set();
 
@@ -151,9 +152,11 @@
 
   function completeTest() {
     recalculateScores();
-    const { ranked } = TEST_DATA.calculateDepartmentRanking(selectedAnswers);
+    const ranking = TEST_DATA.calculateDepartmentRanking(selectedAnswers);
+    const { ranked } = ranking;
     result = TEST_DATA.buildDepartmentResult(ranked[0].department);
     alternatives = ranked.slice(1, 3).map(({ department }) => TEST_DATA.buildDepartmentResult(department));
+    scoreSummary = ranking.scoreSummary;
     saveLatestState(ranked);
     setHeader('수신완료', '인사-2026-0001');
     showScreen('inbox-screen');
@@ -173,6 +176,7 @@
 
   function renderResult() {
     $('#department-summary').textContent = result.personnelReason;
+    $('#tendency-summary').textContent = `성향 점수 요약 · ${scoreSummary.map(({ label, score }) => `${label} ${score}점`).join(' · ')}`;
     $('#department-title').textContent = result.resultTitle;
     $('#department-scene').textContent = result.workSummary;
     $('#department-caution').textContent = result.caution;

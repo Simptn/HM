@@ -4,11 +4,13 @@
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const total = TEST_DATA.questions.length;
   const scoreKeys = ["PLAN", "RULE", "PEOPLE", "DATA", "FIELD", "GROWTH", "CULTURE", "CARE"];
-  const maximumScores = Object.fromEntries(scoreKeys.map((key) => [key, TEST_DATA.questions.reduce((totalScore, question) => totalScore + Math.max(0, ...question.answers.map((answer) => answer.scores[key] || 0)), 0)]));
+  const storageKey = 'gunsan-department-test-latest';
   let current = 0;
   let selectedAnswers = Array(total).fill(null);
   let scores = createEmptyScores();
   let result = TEST_DATA.buildDepartmentResult(TEST_DATA.getCandidateDepartments()[0]);
+  let alternatives = [];
+  let scoreSummary = [];
   let typingTimer;
   const shownCheckpoints = new Set();
 
@@ -29,12 +31,32 @@
     $('#header-doc-number').textContent = number;
   }
 
+  function saveLatestState(ranked = []) {
+    const state = { selectedAnswers, resultIds: ranked.slice(0, 3).map(({ department }) => department.id) };
+    localStorage.setItem(storageKey, JSON.stringify(state));
+  }
+
+  function restoreLatestState() {
+    try {
+      const state = JSON.parse(localStorage.getItem(storageKey));
+      if (!Array.isArray(state?.selectedAnswers) || state.selectedAnswers.length !== total) return;
+      selectedAnswers = state.selectedAnswers.map((answer, index) => Number.isInteger(answer) && TEST_DATA.questions[index].answers[answer] ? answer : null);
+      recalculateScores();
+      current = selectedAnswers.findIndex((answer) => answer === null);
+      if (current < 0) current = total;
+    } catch (error) {
+      localStorage.removeItem(storageKey);
+    }
+  }
+
   function reset() {
     clearInterval(typingTimer);
     current = 0;
     selectedAnswers = Array(total).fill(null);
     scores = createEmptyScores();
+    alternatives = [];
     shownCheckpoints.clear();
+    localStorage.removeItem(storageKey);
     setHeader('기안대기');
     showScreen('start-screen');
   }
@@ -95,6 +117,7 @@
   function selectAnswer(answerIndex, button) {
     selectedAnswers[current] = answerIndex;
     recalculateScores();
+    saveLatestState();
     document.querySelectorAll('.answer-button').forEach((item) => {
       item.classList.toggle('selected', item === button);
       item.disabled = true;
@@ -129,17 +152,12 @@
 
   function completeTest() {
     recalculateScores();
-    const userVector = Object.fromEntries(scoreKeys.map((key) => [key, maximumScores[key] ? scores[key] / maximumScores[key] : 0]));
-    const departmentScore = (department) => {
-      const deptVector = Object.fromEntries(scoreKeys.map((key) => [key, (department.vector[key] || 0) / 5]));
-      const dot = scoreKeys.reduce((sum, key) => sum + userVector[key] * deptVector[key], 0);
-      const userMagnitude = Math.sqrt(scoreKeys.reduce((sum, key) => sum + userVector[key] ** 2, 0));
-      const deptMagnitude = Math.sqrt(scoreKeys.reduce((sum, key) => sum + deptVector[key] ** 2, 0));
-      return deptMagnitude ? dot / ((userMagnitude || 1) * deptMagnitude) : 0;
-    };
-    const candidates = TEST_DATA.getCandidateDepartments();
-    const winner = candidates.reduce((best, department) => departmentScore(department) > departmentScore(best) ? department : best, candidates[0]);
-    result = TEST_DATA.buildDepartmentResult(winner);
+    const ranking = TEST_DATA.calculateDepartmentRanking(selectedAnswers);
+    const { ranked } = ranking;
+    result = TEST_DATA.buildDepartmentResult(ranked[0].department);
+    alternatives = ranked.slice(1, 3).map(({ department }) => TEST_DATA.buildDepartmentResult(department));
+    scoreSummary = ranking.scoreSummary;
+    saveLatestState(ranked);
     setHeader('수신완료', '인사-2026-0001');
     showScreen('inbox-screen');
     const mail = $('#result-mail');
@@ -158,11 +176,14 @@
 
   function renderResult() {
     $('#department-summary').textContent = result.personnelReason;
+    $('#tendency-summary').textContent = `성향 점수 요약 · ${scoreSummary.map(({ label, score }) => `${label} ${score}점`).join(' · ')}`;
     $('#department-title').textContent = result.resultTitle;
     $('#department-scene').textContent = result.workSummary;
     $('#department-caution').textContent = result.caution;
     $('#department-bureau').textContent = result.bureau;
-    $('#strength-list').innerHTML = result.strengths.map((strength) => `<li>${strength}</li>`).join('');
+    $('#strength-list').innerHTML = result.strengths.slice(0, 3).map((strength) => `<li>${strength}</li>`).join('');
+    $('#alternative-one').textContent = alternatives[0]?.name || '-';
+    $('#alternative-two').textContent = alternatives[1]?.name || '-';
     setHeader('열람완료', '인사-2026-0001');
     showScreen('result-screen');
     if (reducedMotion.matches) {
@@ -173,37 +194,98 @@
     }
   }
 
+  function loadHtml2Canvas() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      script.crossOrigin = 'anonymous';
+      script.onload = () => resolve(window.html2canvas);
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function canvasToBlob(canvas) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('PNG 변환 실패')), 'image/png');
+    });
+  }
+
+  async function renderCardWithSvgFallback(card) {
+    const css = await fetch('style.css').then((response) => response.text());
+    const clone = card.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+    clone.style.width = `${card.offsetWidth}px`;
+    clone.style.height = `${card.offsetHeight}px`;
+    const markup = `<div xmlns="http://www.w3.org/1999/xhtml"><style>${css}</style>${clone.outerHTML}</div>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${card.offsetWidth}" height="${card.offsetHeight}"><foreignObject width="100%" height="100%">${markup}</foreignObject></svg>`;
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
+    try {
+      const image = new Image();
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+        image.src = url;
+      });
+      const canvas = document.createElement('canvas');
+      const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 1));
+      canvas.width = card.offsetWidth * scale;
+      canvas.height = card.offsetHeight * scale;
+      const context = canvas.getContext('2d');
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.scale(scale, scale);
+      context.drawImage(image, 0, 0);
+      return canvas;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function createResultCardPng() {
+    const card = $('#result-card');
+    try {
+      const html2canvas = await loadHtml2Canvas();
+      return canvasToBlob(await html2canvas(card, {
+        backgroundColor: '#ffffff',
+        logging: false,
+        scale: Math.min(3, Math.max(2, window.devicePixelRatio || 1)),
+        useCORS: true
+      }));
+    } catch (error) {
+      return canvasToBlob(await renderCardWithSvgFallback(card));
+    }
+  }
+
+  function downloadBlob(blob) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = 'gunsan-dept-result.png';
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   async function saveShareImage() {
-    const card = $('#share-card');
     showToast('공문 이미지를 생성하고 있습니다.');
     try {
-      const css = await fetch('style.css').then((response) => response.text());
-      const clone = card.cloneNode(true);
-      clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-      clone.style.width = `${card.offsetWidth}px`;
-      clone.style.height = `${card.offsetHeight}px`;
-      const markup = `<div xmlns="http://www.w3.org/1999/xhtml"><style>${css}</style>${clone.outerHTML}</div>`;
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${card.offsetWidth}" height="${card.offsetHeight}"><foreignObject width="100%" height="100%">${markup}</foreignObject></svg>`;
-      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const image = new Image();
-      image.onload = () => {
-        const canvas = document.createElement('canvas');
-        const scale = 2;
-        canvas.width = card.offsetWidth * scale;
-        canvas.height = card.offsetHeight * scale;
-        const context = canvas.getContext('2d');
-        context.scale(scale, scale);
-        context.drawImage(image, 0, 0);
-        URL.revokeObjectURL(url);
-        const link = document.createElement('a');
-        link.download = `정기인사-알림-${result.name}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        showToast('공문 이미지를 저장했습니다.');
-      };
-      image.onerror = () => { URL.revokeObjectURL(url); showToast('이미지 저장에 실패했습니다. 브라우저 캡처를 이용해 주세요.'); };
-      image.src = url;
+      const blob = await createResultCardPng();
+      const file = new File([blob], 'gunsan-dept-result.png', { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: '정기인사 알림', text: '군산시 추천 부서 테스트 결과입니다.' });
+          showToast('공문 이미지를 공유했습니다.');
+          return;
+        } catch (shareError) {
+          if (shareError.name === 'AbortError') {
+            showToast('공유를 취소했습니다.');
+            return;
+          }
+        }
+      }
+      downloadBlob(blob);
+      showToast('공문 이미지를 저장했습니다.');
     } catch (error) {
       showToast('이미지 저장에 실패했습니다. 브라우저 캡처를 이용해 주세요.');
     }
@@ -216,7 +298,7 @@
     setTimeout(() => toast.classList.remove('show'), 2200);
   }
 
-  $('#start-button').addEventListener('click', () => { setHeader('작성중'); showScreen('quiz-screen'); renderQuestion(); });
+  $('#start-button').addEventListener('click', () => { setHeader('작성중'); if (current >= total) return completeTest(); showScreen('quiz-screen'); renderQuestion(); });
   $('#continue-button').addEventListener('click', () => { showScreen('quiz-screen'); renderQuestion(); });
   $('#progress-close').addEventListener('click', () => { showScreen('quiz-screen'); renderQuestion(); });
   $('#previous-button').addEventListener('click', previousQuestion);
@@ -226,4 +308,6 @@
   $('#back-inbox').addEventListener('click', () => showScreen('inbox-screen'));
   $('#restart-button').addEventListener('click', reset);
   $('#save-image').addEventListener('click', saveShareImage);
+
+  restoreLatestState();
 })();
